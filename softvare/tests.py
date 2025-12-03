@@ -101,7 +101,7 @@ try:
                     print("Ошибка записи в порт:", e)
 
         # --------- ПОКАЗ КАДРА ---------
-        cv2.imshow("frame", output)
+        # cv2.imshow("frame", output)
 
         key = cv2.waitKey(1) & 0xFF
         if key == ord('q'):
