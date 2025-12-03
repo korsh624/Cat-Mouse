@@ -1,96 +1,193 @@
-boolean signalStart = false;
-boolean squareInFocus = false;
-String inputString = "";
-int l_state = 0; //тики левого мотора
-int r_state = 0; //тики правого мотора
-void setup() {
-  attachInterrupt(0, l_tik, CHANGE); //аппаратное прерывание левого мотора
-  attachInterrupt(1, r_tik, CHANGE); //аппаратное прерывание правого мотора
+// ----- ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ -----
 
-  pinMode(4, OUTPUT); //turn left motor
-  pinMode(5, OUTPUT); //speed left motor
-  pinMode(6, OUTPUT); //speed right motor
-  pinMode(7, OUTPUT); //turn right motor
+volatile int l_state = 0;   // тики левого мотора (в прерывании -> volatile)
+volatile int r_state = 0;   // тики правого мотора
+
+const int PIN_LEFT_DIR  = 4;   // направление левого мотора
+const int PIN_LEFT_PWM  = 5;   // скорость левого мотора (PWM)
+const int PIN_RIGHT_PWM = 6;   // скорость правого мотора (PWM)
+const int PIN_RIGHT_DIR = 7;   // направление правого мотора
+const int PIN_LED       = 13;  // индикатор
+
+// Буфер для приёма строки из Serial
+const byte CMD_BUF_LEN = 32;
+char cmdBuf[CMD_BUF_LEN];
+byte cmdPos = 0;
+
+// Флаг: уже выполняли хотя бы одну последовательность по "start"
+bool hasRunFirstSequence = false;
+
+
+// ----- НАСТРОЙКА -----
+
+void setup() {
+  attachInterrupt(0, l_tik, CHANGE); // пин 2 на Arduino UNO
+  attachInterrupt(1, r_tik, CHANGE); // пин 3 на Arduino UNO
+
+  pinMode(PIN_LEFT_DIR,  OUTPUT);
+  pinMode(PIN_LEFT_PWM,  OUTPUT);
+  pinMode(PIN_RIGHT_PWM, OUTPUT);
+  pinMode(PIN_RIGHT_DIR, OUTPUT);
+  pinMode(PIN_LED,       OUTPUT);
+
   Serial.begin(115200);
   delay(1000);
-  while (!Serial) {
-    delay(20);
+
+  // Очистим входной буфер от мусора
+  while (Serial.available()) {
+    Serial.read();
   }
+
+  digitalWrite(PIN_LED, HIGH);
+  Serial.println(F("Arduino готов. Жду первую команду 'start'."));
 }
 
-boolean readMsg() {
-  if (Serial.available()) {
-    char c = Serial.read();
-    if (c == '\n') {                // строка завершена
-      inputString.trim();
-      if (inputString == "start") {
-        return true;
+
+// ----- ПРИЁМ КОМАНДЫ -----
+
+// true, если считана команда "start"
+bool readStartCommand() {
+  while (Serial.available()) {
+    char c = (char)Serial.read();
+
+    if (c == '\n' || c == '\r') {
+      // Конец строки
+      cmdBuf[cmdPos] = '\0';      // завершаем строку
+      if (cmdPos > 0) {
+        Serial.print(F("RX: '"));
+        Serial.print(cmdBuf);
+        Serial.println(F("'"));
+
+        bool isStart = (strcmp(cmdBuf, "start") == 0);
+        cmdPos = 0;
+        cmdBuf[0] = '\0';
+
+        if (isStart) {
+          Serial.println(F("Команда 'start' принята."));
+          return true;
+        }
+      } else {
+        // Пустая строка - игнор
+        cmdPos = 0;
       }
-      inputString = "";
     } else {
-      inputString += c;
+      // Накопление символов
+      if (cmdPos < CMD_BUF_LEN - 1) {
+        cmdBuf[cmdPos++] = c;
+      } else {
+        // Переполнение буфера - сброс
+        cmdPos = 0;
+      }
     }
   }
   return false;
-  Serial.flush();
+}
+
+
+// ----- ДВИЖЕНИЕ -----
+
+void stopAllMotors() {
+  digitalWrite(PIN_LEFT_DIR,  LOW);
+  digitalWrite(PIN_RIGHT_DIR, LOW);
+  analogWrite(PIN_LEFT_PWM,   0);
+  analogWrite(PIN_RIGHT_PWM,  0);
 }
 
 void rightTurn(int speed) {
-  digitalWrite(7, 1);
-  digitalWrite(4, 0);
-  analogWrite(6, speed);
-  analogWrite(5, speed);
-
+  digitalWrite(PIN_RIGHT_DIR, HIGH);
+  digitalWrite(PIN_LEFT_DIR,  LOW);
+  analogWrite(PIN_RIGHT_PWM,  speed);
+  analogWrite(PIN_LEFT_PWM,   speed);
 }
-// поворот направо с определенной скоростью
 
 void leftTurn(int speed) {
-  digitalWrite(7, 0);
-  digitalWrite(4, 1);
-  analogWrite(6, speed);
-  analogWrite(5, speed);
-}
-// поворот налево с определенной скоростью
-void stopAllMotors() {
-  digitalWrite(4, 0);
-  digitalWrite(5, 0);
-  digitalWrite(6, 0);
-  digitalWrite(7, 0);
-
+  digitalWrite(PIN_RIGHT_DIR, LOW);
+  digitalWrite(PIN_LEFT_DIR,  HIGH);
+  analogWrite(PIN_RIGHT_PWM,  speed);
+  analogWrite(PIN_LEFT_PWM,   speed);
 }
 
-void resvard(int n) {
-  resetstate();
-  while ((l_state < n) and (r_state < n)) {
-    Serial.print("l_state ");
-    Serial.print(l_state);
-    Serial.print(" r_state ");
-    Serial.println(r_state);
-    digitalWrite(7, 0);
-    digitalWrite(4, 0);
-    analogWrite(6, 255);
-    analogWrite(5, 255);
-  }
-  stopAllMotors();
-  //Эта функция дает команду отъехать на количество тиков на энкодерах, 1600 - 1 оборот колеса после приезда она сбрасывает состояние энкодеров
+void resetstate() {
+  noInterrupts();
+  l_state = 0;
+  r_state = 0;
+  interrupts();
 }
 
-
+// Движение вперёд на n тиков, с таймаутом
 void forvard(int n) {
+  Serial.println(F("FORWARD start"));
   resetstate();
-  while ((l_state < n) and (r_state < n)) {
-    Serial.print("l_state ");
-    Serial.print(l_state);
-    Serial.print(" r_state ");
-    Serial.println(r_state);
-    digitalWrite(7, 1);
-    digitalWrite(4, 1);
-    analogWrite(6, 255);
-    analogWrite(5, 255);
+  unsigned long t0 = millis();
+  const unsigned long MAX_TIME = 15000;  // 15 секунд на всякий случай
+
+  while (true) {
+    int l, r;
+    noInterrupts();
+    l = l_state;
+    r = r_state;
+    interrupts();
+
+    if (l >= n && r >= n) {
+      break;
+    }
+
+    if (millis() - t0 > MAX_TIME) {
+      Serial.println(F("FORWARD timeout!"));
+      break;
+    }
+
+    digitalWrite(PIN_RIGHT_DIR, HIGH);
+    digitalWrite(PIN_LEFT_DIR,  HIGH);
+    analogWrite(PIN_RIGHT_PWM, 255);
+    analogWrite(PIN_LEFT_PWM,  255);
   }
+
   stopAllMotors();
-  //Эта функция дает команду ехать вперед на количество тиков на энкодерах, 1600 - 1 оборот колеса после приезда она сбрасывает состояние энкодеров
+  Serial.print(F("FORWARD done. l_state="));
+  Serial.print(l_state);
+  Serial.print(F(" r_state="));
+  Serial.println(r_state);
 }
+
+// Движение назад на n тиков, с таймаутом
+void resvard(int n) {
+  Serial.println(F("BACKWARD start"));
+  resetstate();
+  unsigned long t0 = millis();
+  const unsigned long MAX_TIME = 15000;  // 15 секунд на всякий случай
+
+  while (true) {
+    int l, r;
+    noInterrupts();
+    l = l_state;
+    r = r_state;
+    interrupts();
+
+    if (l >= n && r >= n) {
+      break;
+    }
+
+    if (millis() - t0 > MAX_TIME) {
+      Serial.println(F("BACKWARD timeout!"));
+      break;
+    }
+
+    digitalWrite(PIN_RIGHT_DIR, LOW);
+    digitalWrite(PIN_LEFT_DIR,  LOW);
+    analogWrite(PIN_RIGHT_PWM, 255);
+    analogWrite(PIN_LEFT_PWM,  255);
+  }
+
+  stopAllMotors();
+  Serial.print(F("BACKWARD done. l_state="));
+  Serial.print(l_state);
+  Serial.print(F(" r_state="));
+  Serial.println(r_state);
+}
+
+
+// ----- ОБРАБОТЧИКИ ПРЕРЫВАНИЙ -----
 
 void l_tik() {
   l_state += 1;
@@ -98,25 +195,42 @@ void l_tik() {
 void r_tik() {
   r_state += 1;
 }
-void resetstate() {
-  l_state = 0;
-  r_state = 0;
-}
 
+
+// ----- ОСНОВНОЙ ЦИКЛ -----
 
 void loop() {
-
-  while (squareInFocus == false) {
-    leftTurn(200);
-    squareInFocus = readMsg();
+  // 1) Ожидание команды "start"
+  if (!hasRunFirstSequence) {
+    // Первая команда: просто стоим, не вращаемся
+    Serial.println(F("Жду ПЕРВУЮ команду 'start' без вращения..."));
+    while (!readStartCommand()) {
+      stopAllMotors();  // на всякий случай держим моторы в стопе
+    }
+  } else {
+    // Все последующие команды: крутимся влево, пока не придёт "start"
+    Serial.println(F("Вращаюсь влево в ожидании следующей команды 'start'..."));
+    while (!readStartCommand()) {
+      leftTurn(200);    // крутимся
+    }
   }
+
+  // 2) Команда получена — останавливаемся
   stopAllMotors();
+  Serial.println(F("Получен 'start', выполняю движение вперёд-назад"));
+
+  // мигнём светодиодом
+  digitalWrite(PIN_LED, HIGH);
+  delay(100);
+  digitalWrite(PIN_LED, LOW);
+
+  // 3) Выполняем последовательность движения
   forvard(4800);
   delay(1000);
   resvard(4800);
   delay(1000);
-  squareInFocus = false;
-  Serial.flush();
 
+  hasRunFirstSequence = true;  // с этого момента в ожидании будем крутиться
 
+  Serial.println(F("Последовательность выполнена. Жду следующую команду."));
 }
