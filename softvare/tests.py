@@ -5,7 +5,7 @@ import time
 
 from testScript import YoloDetector
 
-PORT = "COM17"      # поменяй на свой при необходимости
+PORT = "dev/ttyACM0"      # поменяй на свой при необходимости
 BAUD = 115200
 
 
