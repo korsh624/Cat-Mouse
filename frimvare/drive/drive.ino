@@ -116,6 +116,7 @@ void loop() {
   resvard(4800);
   delay(1000);
   squareInFocus = false;
+  Serial.flush();
 
 
 }
