@@ -14,9 +14,6 @@ const byte CMD_BUF_LEN = 32;
 char cmdBuf[CMD_BUF_LEN];
 byte cmdPos = 0;
 
-// Флаг: уже выполняли хотя бы одну последовательность по "start"
-bool hasRunFirstSequence = false;
-
 
 // ----- НАСТРОЙКА -----
 
@@ -39,7 +36,7 @@ void setup() {
   }
 
   digitalWrite(PIN_LED, HIGH);
-  Serial.println(F("Arduino готов. Жду первую команду 'start'."));
+  Serial.println(F("Arduino готов. Вращаюсь в ожидании команды 'start'."));
 }
 
 
@@ -192,6 +189,7 @@ void resvard(int n) {
 void l_tik() {
   l_state += 1;
 }
+
 void r_tik() {
   r_state += 1;
 }
@@ -200,22 +198,14 @@ void r_tik() {
 // ----- ОСНОВНОЙ ЦИКЛ -----
 
 void loop() {
-  // 1) Ожидание команды "start"
-  if (!hasRunFirstSequence) {
-    // Первая команда: просто стоим, не вращаемся
-    Serial.println(F("Жду ПЕРВУЮ команду 'start' без вращения..."));
-    while (!readStartCommand()) {
-      stopAllMotors();  // на всякий случай держим моторы в стопе
-    }
-  } else {
-    // Все последующие команды: крутимся влево, пока не придёт "start"
-    Serial.println(F("Вращаюсь влево в ожидании следующей команды 'start'..."));
-    while (!readStartCommand()) {
-      leftTurn(200);    // крутимся
-    }
+  // 1. Вращаемся влево, пока не придёт команда "start"
+  Serial.println(F("Вращаюсь влево в ожидании команды 'start'..."));
+  while (!readStartCommand()) {
+    leftTurn(200);   // скорость можешь подобрать
+    // без delay, чтобы часто проверять UART
   }
 
-  // 2) Команда получена — останавливаемся
+  // 2. Команда получена — останавливаемся
   stopAllMotors();
   Serial.println(F("Получен 'start', выполняю движение вперёд-назад"));
 
@@ -224,13 +214,12 @@ void loop() {
   delay(100);
   digitalWrite(PIN_LED, LOW);
 
-  // 3) Выполняем последовательность движения
-  forvard(4800);
+  // 3. Выполняем последовательность движения
+  forvard(3600);
   delay(1000);
-  resvard(4800);
+  resvard(2400);
   delay(1000);
 
-  hasRunFirstSequence = true;  // с этого момента в ожидании будем крутиться
-
-  Serial.println(F("Последовательность выполнена. Жду следующую команду."));
+  Serial.println(F("Последовательность выполнена. Снова жду 'start' и вращаюсь."));
+  // после этого loop() начнётся заново, и робот опять будет крутиться в ожидании следующего 'start'
 }
