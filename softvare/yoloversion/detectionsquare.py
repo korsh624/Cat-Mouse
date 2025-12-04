@@ -2,9 +2,6 @@ from ultralytics import YOLO
 import cv2
 # Загрузка обученной модели
 model = YOLO("best.pt")  # путь к вашим весам
-savecadr=False
-robotdetected=False
-colorobots=[]
 x_center=0
 y_center=0
 # Открываем видео
@@ -15,7 +12,6 @@ cap = cv2.VideoCapture('output.mp4')
 # Проверяем, открылось ли видео
 if not cap.isOpened():
     print("Ошибка: Не удалось открыть видео!")
-    print(colorobots)
     exit()
 
 # Читаем видео и обрабатываем каждый кадр
