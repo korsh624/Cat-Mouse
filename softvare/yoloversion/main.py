@@ -14,15 +14,14 @@ def main():
     ser.reset_output_buffer()
     prev_in_focus = False
 
-    cap = cv2.VideoCapture('/dev/video0')
-    # cap.set(cv2.CAP_PROP_BUFFERSIZE, 1)
+    cap = cv2.VideoCapture(0)
     in_focus=False
     try:
         while True:
             ret, frame = cap.read()
-            if not ret:
-                print("[PC] Не удалось прочитать кадр")
-                break
+            # if not ret:
+            #     print("[PC] Не удалось прочитать кадр")
+            #     break
             in_focus, vis = detector.findSquare(frame)
             if in_focus and not prev_in_focus:
                 ser.write(b"start\n")
