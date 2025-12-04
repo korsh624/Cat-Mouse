@@ -37,7 +37,7 @@ while True:
     out.write(frame)
 
     # Отображаем кадр в окне (необязательно)
-    cv2.imshow('Camera Feed - Recording (Press "q" to stop)', frame)
+    # cv2.imshow('Camera Feed - Recording (Press "q" to stop)', frame)
 
     # Останавливаем запись при нажатии клавиши 'q'
     if cv2.waitKey(1) & 0xFF == ord('q'):
