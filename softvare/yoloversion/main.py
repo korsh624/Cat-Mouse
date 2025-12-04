@@ -14,8 +14,8 @@ def main():
     ser.reset_output_buffer()
     prev_in_focus = False
 
-    cap = cv2.VideoCapture(0)
-    cap.set(cv2.CAP_PROP_BUFFERSIZE, 1)
+    cap = cv2.VideoCapture('/dev/video0')
+    # cap.set(cv2.CAP_PROP_BUFFERSIZE, 1)
     in_focus=False
     try:
         while True:
