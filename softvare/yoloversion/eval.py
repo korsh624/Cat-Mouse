@@ -5,8 +5,8 @@ model = YOLO("best1.pt")  # путь к вашим весам
 x_center=0
 y_center=0
 def findSquare(frame):
-    frame_width = frame.shape[1]
-    frame_height = frame.shape[0]
+    frame_width = frame.shape[0]
+    frame_height = frame.shape[1]
     frame=cv2.resize(frame, (640,480))
     results = model.predict(frame, conf=0.7)  # conf - порог уверенности
     for result in results:
