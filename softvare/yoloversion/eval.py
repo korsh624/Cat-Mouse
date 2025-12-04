@@ -18,7 +18,8 @@ def findSquare(frame):
                 x_center=x1+(x2-x1)//2
                 y_center = y1+(y2 - y1) // 2
                 cv2.circle(frame, (int(x_center), int(y_center)), 5, (0, 0, 255), cv2.FILLED)
-                dx=abs(x_center-x2)
+                cv2.circle(frame, (int(frame_width//2), int(frame_height//2)), 5, (255, 0, 0), cv2.FILLED)
+                dx=abs(x_center-frame_width//2)
                 if dx < 50:
                     print('in focus')
                     return True, frame
