@@ -20,7 +20,7 @@ if fps == 0:
 # 3. Определяем кодек и создаем объект VideoWriter для записи видео
 # Кодек 'mp4v' подходит для формата .mp4. Для .avi можно использовать 'XVID'.
 fourcc = cv2.VideoWriter_fourcc(*'mp4v')
-out = cv2.VideoWriter('output.mp4', fourcc, fps, (frame_width, frame_height))
+out = cv2.VideoWriter('output_test.mp4', fourcc, fps, (frame_width, frame_height))
 
 print(f"Начало записи видео в файл output.mp4 с разрешением {frame_width}x{frame_height} и FPS {fps}")
 
