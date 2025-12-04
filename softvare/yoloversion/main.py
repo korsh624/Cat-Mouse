@@ -15,6 +15,7 @@ def main():
     prev_in_focus = False
 
     cap = cv2.VideoCapture(0)
+    cap.set(cv2.CAP_PROP_BUFFERSIZE, 1)
     in_focus=False
     try:
         while True:
