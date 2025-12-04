@@ -1,7 +1,7 @@
 from ultralytics import YOLO
 import cv2
 # Загрузка обученной модели
-model = YOLO("best.pt")  # путь к вашим весам
+model = YOLO("best1.pt")  # путь к вашим весам
 x_center=0
 y_center=0
 def findSquare(frame):

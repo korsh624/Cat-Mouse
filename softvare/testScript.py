@@ -7,7 +7,7 @@ import pathlib
 pathlib.WindowsPath = pathlib.PosixPath
 
 # --------- НАСТРОЙКИ МОДЕЛИ ---------
-MODEL_PATH = "best.pt"          # путь к твоей модели YOLOv5
+MODEL_PATH = "yoloversion/best1.pt"  # путь к твоей модели YOLOv5
 TARGET_CLASS_NAME = "figure"    # имя класса из обучения
 CONF_THRESH = 0.5               # порог уверенности
 CENTER_TOLERANCE = 50           # допуск по центру [-50, 50] пикселей

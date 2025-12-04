@@ -3,6 +3,7 @@ import cv2
 import serial
 import time
 import eval as detector
+from app import app
 PORT = "/dev/ttyACM0"      # поменяй на свой при необходимости
 BAUD = 115200
 def main():
@@ -42,3 +43,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+    app.run(host='0.0.0.0', port=5000, threaded=True)
