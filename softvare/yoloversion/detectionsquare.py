@@ -33,6 +33,7 @@ while True:
                 x_center=x1+(x2-x1)//2
                 y_center = y1+(y2 - y1) // 2
                 cv2.circle(frame, (int(x_center), int(y_center)), 5, (0, 0, 255), cv2.FILLED)
+
                 # cv2.imshow("Robot Detection", cropped_img)
     # cv2.imshow("YOLO Robot Detection", frame)
     if cv2.waitKey(1) == ord('q'):

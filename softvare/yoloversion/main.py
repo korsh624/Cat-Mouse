@@ -22,7 +22,7 @@ def main():
             ret, frame = cap.read()
             if not ret:
                 print("[PC] Не удалось прочитать кадр")
-                continue
+                break
             in_focus, vis = detector.findSquare(frame)
             if in_focus and not prev_in_focus:
                 ser.write(b"start\n")
