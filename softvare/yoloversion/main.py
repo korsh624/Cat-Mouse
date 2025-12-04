@@ -24,6 +24,8 @@ def main():
             in_focus, vis = detector.findSquare(frame)
             if in_focus and not prev_in_focus:
                 ser.write(b"start\n")
+                ser.reset_input_buffer()
+                ser.reset_output_buffer()
                 ser.flush()
                 print("[PC] Sent: start (объект по центру)")
             prev_in_focus = in_focus
