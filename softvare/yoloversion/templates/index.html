@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <title>Видеотрансляция OpenCV → Flask</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <style>
+    body { font-family: Arial, sans-serif; text-align:center; margin: 20px; }
+    img { max-width: 100%; height: auto; border: 1px solid #ccc; }
+    .controls { margin-top: 10px; }
+  </style>
+</head>
+<body>
+  <h1>Видеотрансляция с камеры</h1>
+  <div>
+    <img id="video" src="{{ url_for('video_feed') }}" alt="video stream">
+  </div>
+  <div class="controls">
+    <button onclick="pauseResume()">Пауза/Возобновить</button>
+    <button onclick="screenshot()">Сохранить кадр</button>
+  </div>
+
+  <script>
+    const img = document.getElementById('video');
+    let paused = false;
+    function pauseResume() {
+      if (!paused) {
+        // чтобы "поставить на паузу" MJPEG — заменим источник на пустую картинку
+        img.dataset.src = img.src;
+        img.src = '';
+        paused = true;
+      } else {
+        img.src = img.dataset.src || '{{ url_for("video_feed") }}';
+        paused = false;
+      }
+    }
+    function screenshot() {
+      // Загружаем текущее изображение в canvas и сохраняем
+      if (!img.src) return alert('Поток неактивен');
+      const c = document.createElement('canvas');
+      c.width = img.naturalWidth;
+      c.height = img.naturalHeight;
+      const ctx = c.getContext('2d');
+      ctx.drawImage(img, 0, 0);
+      const data = c.toDataURL('image/png');
+      const a = document.createElement('a');
+      a.href = data;
+      a.download = 'screenshot.png';
+      a.click();
+    }
+  </script>
+</body>
+</html>
