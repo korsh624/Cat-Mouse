@@ -3,7 +3,6 @@ import cv2
 import serial
 import time
 import eval as detector
-from app import app
 PORT = "/dev/ttyACM0"      # поменяй на свой при необходимости
 BAUD = 115200
 def main():
