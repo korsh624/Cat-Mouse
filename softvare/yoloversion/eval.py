@@ -20,6 +20,7 @@ def findSquare(frame):
                 cv2.circle(frame, (int(x_center), int(y_center)), 5, (0, 0, 255), cv2.FILLED)
                 dx=abs(x_center-x2)
                 if dx < 50:
+                    print('in focus')
                     return True, frame
         # cv2.imshow("YOLO Robot Detection", frame)
         if cv2.waitKey(1) == ord('q'):
