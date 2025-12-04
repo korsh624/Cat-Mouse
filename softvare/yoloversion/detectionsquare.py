@@ -5,8 +5,8 @@ model = YOLO("best.pt")  # путь к вашим весам
 x_center=0
 y_center=0
 # Открываем видео
-# cap = cv2.VideoCapture(0)
-cap = cv2.VideoCapture('output.mp4')
+cap = cv2.VideoCapture(0)
+# cap = cv2.VideoCapture('output.mp4')
 
 
 # Проверяем, открылось ли видео
