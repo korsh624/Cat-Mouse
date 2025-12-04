@@ -21,7 +21,7 @@ def findSquare(frame):
                 dx=abs(x_center-x2)
                 if dx < 50:
                     return True, frame
-        cv2.imshow("YOLO Robot Detection", frame)
+        # cv2.imshow("YOLO Robot Detection", frame)
         if cv2.waitKey(1) == ord('q'):
             exit()
     return False, frame
