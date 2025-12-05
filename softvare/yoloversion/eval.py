@@ -6,7 +6,7 @@ x_center=0
 y_center=0
 def findSquare(frame):
     frame=cv2.resize(frame, (640,480))
-    results = model.predict(frame, conf=0.7)  # conf - порог уверенности
+    results = model.predict(frame, conf=0.8)  # conf - порог уверенности
     for result in results:
         if result.boxes:
             for box in result.boxes:

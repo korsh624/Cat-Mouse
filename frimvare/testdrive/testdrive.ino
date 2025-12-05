@@ -113,7 +113,7 @@ void loop() {
   stopAllMotors();
   forvard(4800);
   delay(1000);
-  resvard(4800);
+  resvard(2400);
   delay(1000);
   squareInFocus = false;
   Serial.flush();
