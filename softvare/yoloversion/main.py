@@ -3,7 +3,7 @@ import cv2
 import serial
 import time
 import eval as detector
-PORT = "/dev/ttyACM0"      # поменяй на свой при необходимости
+PORT = "/dev/ttyUSB0"      # поменяй на свой при необходимости
 BAUD = 115200
 def main():
     ser = serial.Serial(PORT, BAUD)
