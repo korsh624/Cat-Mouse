@@ -4,7 +4,7 @@ import threading
 import time
 import atexit
 from eval import findSquare
-
+print('start app ')
 app = Flask(__name__)
 
 # Параметры камеры: можно заменить 0 на путь к RTSP или файл
